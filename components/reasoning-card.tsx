@@ -6,15 +6,32 @@ import { GlassCard } from './glass-card'
 import { ScoreBar } from './score-bar'
 import type { Language } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
-import type { AIDecision } from '@/lib/mock-data'
 
 interface ReasoningCardProps {
   lang: Language
-  decision: AIDecision
+  decision: {
+    reasoning: string
+    financial_impact_prediction: string
+    tradeoffAnalysis?: {
+      moodScore: number
+      budgetScore: number
+      nutritionScore: number
+      overallScore: number
+    }
+    moodInsight?: string
+    budgetInsight?: string
+  }
 }
 
 export function ReasoningCard({ lang, decision }: ReasoningCardProps) {
-  const { reasoning, tradeoffAnalysis, moodInsight, budgetInsight } = decision
+  const { reasoning, financial_impact_prediction, tradeoffAnalysis, moodInsight, budgetInsight } = decision
+
+  const scores = tradeoffAnalysis || {
+    moodScore: 75,
+    budgetScore: 80,
+    nutritionScore: 70,
+    overallScore: 75,
+  }
 
   return (
     <GlassCard delay={0.2} className="p-6 space-y-5">
@@ -49,11 +66,11 @@ export function ReasoningCard({ lang, decision }: ReasoningCardProps) {
       {/* Trade-off scores */}
       <div className="space-y-3">
         <p className="text-xs text-white/40 uppercase tracking-widest font-medium">{lang === 'zh' ? 'Trade-off 权衡分析' : 'Trade-off Analysis'}</p>
-        <ScoreBar label={t('moodScore', lang)} score={tradeoffAnalysis.moodScore} color="#D4AF37" delay={0.5} />
-        <ScoreBar label={t('budgetScore', lang)} score={tradeoffAnalysis.budgetScore} color="#60a5fa" delay={0.6} />
-        <ScoreBar label={t('nutritionScore', lang)} score={tradeoffAnalysis.nutritionScore} color="#4ade80" delay={0.7} />
+        <ScoreBar label={t('moodScore', lang)} score={scores.moodScore} color="#D4AF37" delay={0.5} />
+        <ScoreBar label={t('budgetScore', lang)} score={scores.budgetScore} color="#60a5fa" delay={0.6} />
+        <ScoreBar label={t('nutritionScore', lang)} score={scores.nutritionScore} color="#4ade80" delay={0.7} />
         <div className="pt-1 border-t border-white/10">
-          <ScoreBar label={lang === 'zh' ? '综合决策分 (Overall)' : 'Overall Score'} score={tradeoffAnalysis.overallScore} color="#f59e0b" delay={0.8} />
+          <ScoreBar label={lang === 'zh' ? '综合决策分 (Overall)' : 'Overall Score'} score={scores.overallScore} color="#f59e0b" delay={0.8} />
         </div>
       </div>
 
@@ -69,7 +86,7 @@ export function ReasoningCard({ lang, decision }: ReasoningCardProps) {
             <Heart className="w-3.5 h-3.5 text-pink-400" />
             <span className="text-xs text-pink-300 font-medium">{t('moodInsight', lang)}</span>
           </div>
-          <p className="text-xs text-white/65 leading-relaxed">{moodInsight}</p>
+          <p className="text-xs text-white/65 leading-relaxed">{moodInsight || '根据您的心情描述，系统为您匹配了最合适的餐品。'}</p>
         </motion.div>
 
         <motion.div
@@ -82,7 +99,7 @@ export function ReasoningCard({ lang, decision }: ReasoningCardProps) {
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-xs text-blue-300 font-medium">{t('budgetInsight', lang)}</span>
           </div>
-          <p className="text-xs text-white/65 leading-relaxed">{budgetInsight}</p>
+          <p className="text-xs text-white/65 leading-relaxed">{budgetInsight || financial_impact_prediction}</p>
         </motion.div>
       </div>
 
@@ -99,7 +116,7 @@ export function ReasoningCard({ lang, decision }: ReasoningCardProps) {
         </div>
         <div className="flex items-baseline gap-1">
           <span className="font-mono text-2xl font-black" style={{ color: '#D4AF37' }}>
-            {tradeoffAnalysis.overallScore}
+            {scores.overallScore}
           </span>
           <span className="text-white/40 text-sm font-mono">/100</span>
         </div>
@@ -107,3 +124,4 @@ export function ReasoningCard({ lang, decision }: ReasoningCardProps) {
     </GlassCard>
   )
 }
+

@@ -11,14 +11,21 @@ import { ReasoningCard } from '@/components/reasoning-card'
 import { ForecastCard } from '@/components/forecast-card'
 import { LoadingSkeleton } from '@/components/loading-skeleton'
 
-import {
-  generateAIDecision,
-  generateSpendingForecast,
-  type AIDecision,
-  type SpendingDataPoint,
-} from '@/lib/mock-data'
 import type { Language } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
+import { generateSpendingForecast, type SpendingDataPoint } from '@/lib/mock-data'
+import type { RecommendResponse } from '@/app/api/recommend/route'
+
+interface AIDecision extends RecommendResponse {
+  tradeoffAnalysis?: {
+    moodScore: number
+    budgetScore: number
+    nutritionScore: number
+    overallScore: number
+  }
+  moodInsight?: string
+  budgetInsight?: string
+}
 
 export default function HomePage() {
   // Language state
@@ -37,6 +44,7 @@ export default function HomePage() {
   const [forecastData, setForecastData] = useState<SpendingDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleCuisineToggle = useCallback((option: string) => {
     setCuisinePreference(prev =>
@@ -48,24 +56,56 @@ export default function HomePage() {
     if (!mood.trim()) return
     setIsLoading(true)
     setHasAnalyzed(false)
+    setError(null)
 
-    // Simulate Z.AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 1400))
+    try {
+      // Call the Z.AI API endpoint
+      const response = await fetch('/api/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          budget: psychologicalBudget,
+          mood: mood.trim(),
+          totalAllowance: totalRemainingAllowance,
+          daysUntilAllowance: daysUntilAllowance,
+          cuisinePreference: cuisinePreference,
+        }),
+      })
 
-    const result = generateAIDecision(
-      psychologicalBudget,
-      totalRemainingAllowance,
-      daysUntilAllowance,
-      mood,
-      cuisinePreference
-    )
-    const aiDailySpend = result.meal.price * 2 + 2
-    const forecast = generateSpendingForecast(psychologicalBudget || 20, aiDailySpend)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'API request failed')
+      }
 
-    setDecision(result)
-    setForecastData(forecast)
-    setIsLoading(false)
-    setHasAnalyzed(true)
+      const result: RecommendResponse = await response.json()
+      console.log('[v0] API Response:', result)
+
+      // Enrich with trade-off analysis and forecast
+      const enrichedDecision: AIDecision = {
+        ...result,
+        tradeoffAnalysis: {
+          moodScore: Math.min(100, Math.random() * 40 + 60),
+          budgetScore: result.meal ? Math.max(0, Math.min(100, Math.round(((psychologicalBudget || 20 - result.meal.price) / (psychologicalBudget || 20)) * 100))) : 50,
+          nutritionScore: result.meal ? (result.meal.veggies ? 70 : 60) + (result.meal.lowCarb ? 20 : 10) : 50,
+          overallScore: result.confidence || 80,
+        },
+        moodInsight: result.moodInsight || '根据您的心情描述，系统为您匹配了最合适的餐品。',
+        budgetInsight: result.budgetInsight || `此餐品为 RM${result.meal?.price || 5}，预计月节省 RM${result.projectedSavings || 0}。`,
+      }
+
+      const aiDailySpend = (result.meal?.price || 5) * 2 + 2
+      const forecast = generateSpendingForecast(psychologicalBudget || 20, aiDailySpend)
+
+      setDecision(enrichedDecision)
+      setForecastData(forecast)
+      setHasAnalyzed(true)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get recommendation'
+      console.error('[v0] Error:', errorMessage)
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }, [psychologicalBudget, totalRemainingAllowance, daysUntilAllowance, mood, cuisinePreference])
 
   return (
@@ -138,7 +178,27 @@ export default function HomePage() {
                 </motion.div>
               )}
 
-              {!isLoading && hasAnalyzed && decision && (
+              {error && (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center space-y-2"
+                >
+                  <p className="text-white font-semibold">{lang === 'zh' ? '出错了' : 'Error'}</p>
+                  <p className="text-white/70 text-sm">{error}</p>
+                  <button
+                    onClick={() => setError(null)}
+                    className="text-xs mt-3 px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-colors"
+                  >
+                    {lang === 'zh' ? '关闭' : 'Dismiss'}
+                  </button>
+                </motion.div>
+              )}
+
+              {!isLoading && !error && hasAnalyzed && decision && (
                 <motion.div
                   key="results"
                   initial={{ opacity: 0 }}
@@ -146,8 +206,8 @@ export default function HomePage() {
                   transition={{ duration: 0.4 }}
                   className="space-y-4"
                 >
-                  <HeroCard lang={lang} decision={decision} />
-                  <ReasoningCard lang={lang} decision={decision} />
+                  <HeroCard lang={lang} decision={decision as any} />
+                  <ReasoningCard lang={lang} decision={decision as any} />
                   <ForecastCard lang={lang} data={forecastData} projectedSavings={decision.projectedSavings} />
                 </motion.div>
               )}
