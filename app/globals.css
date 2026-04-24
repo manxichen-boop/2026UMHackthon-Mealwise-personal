@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* UM Brand Colors */
+  --navy: #003366;
+  --navy-deep: #001f40;
+  --gold: #D4AF37;
+  --gold-light: #f0d060;
+
+  --background: oklch(0.12 0.04 240);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(1 0 0 / 0.08);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.15 0.04 240);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: #D4AF37;
+  --primary-foreground: #001f40;
+  --secondary: oklch(0.97 0 0 / 0.1);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.97 0 0 / 0.08);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: #D4AF37;
+  --accent-foreground: #001f40;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(1 0 0 / 0.15);
+  --input: oklch(1 0 0 / 0.1);
+  --ring: #D4AF37;
+  --chart-1: #D4AF37;
+  --chart-2: oklch(0.6 0.15 200);
+  --chart-3: oklch(0.7 0.12 150);
+  --chart-4: oklch(0.65 0.18 280);
+  --chart-5: oklch(0.7 0.15 30);
+  --radius: 1rem;
+  --sidebar: oklch(0.10 0.04 240);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: #D4AF37;
+  --sidebar-primary-foreground: #001f40;
+  --sidebar-accent: oklch(1 0 0 / 0.08);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.12);
+  --sidebar-ring: #D4AF37;
+}
+
+/* No dark mode override — app uses single deep navy theme */
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), 'Geist', 'Geist Fallback';
+  --font-mono: var(--font-geist-mono), 'Geist Mono', 'Geist Mono Fallback';
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% -20%, rgba(0, 51, 102, 0.6) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(212, 175, 55, 0.15) 0%, transparent 50%);
+    min-height: 100dvh;
+  }
+  html {
+    @apply bg-background;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl;
+  }
+  .glass-card-dark {
+    @apply backdrop-blur-md bg-black/20 border border-white/10 rounded-2xl shadow-xl;
+  }
+  .gold-text {
+    color: var(--gold);
+  }
+  .navy-bg {
+    background-color: var(--navy);
+  }
+  .slider-gold::-webkit-slider-thumb {
+    background: var(--gold);
+  }
+}
