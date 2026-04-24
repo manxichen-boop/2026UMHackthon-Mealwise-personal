@@ -2,32 +2,44 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Wallet, Brain, Leaf, Calendar, Sparkles, ChevronDown } from 'lucide-react'
-import { NUTRITION_OPTIONS, MOOD_SUGGESTIONS } from '@/lib/mock-data'
+import { Wallet, Brain, UtensilsCrossed, Calendar, Sparkles, ChevronDown, PiggyBank } from 'lucide-react'
+import { CUISINE_OPTIONS, MOOD_SUGGESTIONS } from '@/lib/mock-data'
+import type { Language } from '@/lib/i18n'
+import { t } from '@/lib/i18n'
 
 interface DecisionSidebarProps {
-  budget: number
+  lang: Language
+  psychologicalBudget: number | null
+  totalRemainingAllowance: number | null
   mood: string
-  priorities: string[]
-  daysUntilAllowance: number
+  cuisinePreference: string[]
+  daysUntilAllowance: number | null
+  hasRegularAllowance: boolean
   isLoading: boolean
-  onBudgetChange: (v: number) => void
+  onPsychologicalBudgetChange: (v: number | null) => void
+  onTotalRemainingChange: (v: number | null) => void
   onMoodChange: (v: string) => void
-  onPriorityToggle: (v: string) => void
-  onDaysChange: (v: number) => void
+  onCuisineToggle: (v: string) => void
+  onDaysChange: (v: number | null) => void
+  onHasRegularChange: (v: boolean) => void
   onAnalyze: () => void
 }
 
 export function DecisionSidebar({
-  budget,
+  lang,
+  psychologicalBudget,
+  totalRemainingAllowance,
   mood,
-  priorities,
+  cuisinePreference,
   daysUntilAllowance,
+  hasRegularAllowance,
   isLoading,
-  onBudgetChange,
+  onPsychologicalBudgetChange,
+  onTotalRemainingChange,
   onMoodChange,
-  onPriorityToggle,
+  onCuisineToggle,
   onDaysChange,
+  onHasRegularChange,
   onAnalyze,
 }: DecisionSidebarProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -48,25 +60,26 @@ export function DecisionSidebar({
           <Brain className="w-5 h-5" style={{ color: '#001f40' }} />
         </div>
         <div>
-          <p className="text-xs text-white/50 uppercase tracking-widest">Decision Input</p>
-          <h2 className="text-white font-semibold text-sm leading-tight">SmartBite Advisor</h2>
+          <p className="text-xs text-white/50 uppercase tracking-widest">{t('decisionInput', lang)}</p>
+          <h2 className="text-white font-semibold text-sm leading-tight">{t('smartBiteAdvisor', lang)}</h2>
         </div>
       </div>
 
-      {/* Budget Slider */}
+      {/* Psychological Budget */}
       <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Wallet className="w-4 h-4" style={{ color: '#D4AF37' }} />
-          <span className="text-white/80 text-sm font-medium">Wallet Balance</span>
+          <span className="text-white/80 text-sm font-medium">{t('psychologicalBudget', lang)}</span>
+          <span className="text-xs text-white/40">(可选)</span>
         </div>
 
         <div className="flex items-end justify-between">
           <span className="text-white/50 text-xs">RM 0</span>
           <div className="text-center">
             <span className="font-mono text-3xl font-bold" style={{ color: '#D4AF37' }}>
-              {budget.toFixed(0)}
+              {psychologicalBudget?.toFixed(0) || '—'}
             </span>
-            <span className="font-mono text-sm text-white/60 ml-1">RM</span>
+            {psychologicalBudget !== null && <span className="font-mono text-sm text-white/60 ml-1">RM</span>}
           </div>
           <span className="text-white/50 text-xs">RM 100</span>
         </div>
@@ -76,36 +89,57 @@ export function DecisionSidebar({
           min={0}
           max={100}
           step={1}
-          value={budget}
-          onChange={e => onBudgetChange(Number(e.target.value))}
+          value={psychologicalBudget || 50}
+          onChange={e => onPsychologicalBudgetChange(Number(e.target.value) || null)}
           className="w-full accent-yellow-400 h-2 rounded-full appearance-none cursor-pointer"
           style={{ accentColor: '#D4AF37' }}
         />
 
         <div className="flex justify-between text-xs text-white/40">
-          <span>危急</span>
+          <span>{lang === 'zh' ? '不固定' : 'Flexible'}</span>
           <span
             className={`font-medium ${
-              budget < 20 ? 'text-red-400' : budget < 50 ? 'text-yellow-400' : 'text-green-400'
+              psychologicalBudget === null ? 'text-white/40' :
+              psychologicalBudget < 20 ? 'text-red-400' : psychologicalBudget < 50 ? 'text-yellow-400' : 'text-green-400'
             }`}
           >
-            {budget < 20 ? '预算紧张' : budget < 50 ? '注意控制' : '状态良好'}
+            {psychologicalBudget === null ? (lang === 'zh' ? '让 AI 决策' : 'AI decides') :
+              psychologicalBudget < 20 ? t('budgetTight', lang) : psychologicalBudget < 50 ? t('controlNeeded', lang) : t('goodStatus', lang)}
           </span>
-          <span>充裕</span>
+          <span>{t('comfortable', lang)}</span>
         </div>
+      </div>
+
+      {/* Total Remaining Allowance */}
+      <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <PiggyBank className="w-4 h-4" style={{ color: '#D4AF37' }} />
+          <span className="text-white/80 text-sm font-medium">{t('totalRemainingAllowance', lang)}</span>
+          <span className="text-xs text-white/40">(可选)</span>
+        </div>
+
+        <input
+          type="number"
+          min={0}
+          step={10}
+          placeholder={lang === 'zh' ? '输入总生活费' : 'Enter total allowance'}
+          value={totalRemainingAllowance || ''}
+          onChange={e => onTotalRemainingChange(e.target.value ? Number(e.target.value) : null)}
+          className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/30 transition-all"
+        />
       </div>
 
       {/* Mood Input */}
       <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4" style={{ color: '#D4AF37' }} />
-          <span className="text-white/80 text-sm font-medium">Mood / Craving</span>
+          <span className="text-white/80 text-sm font-medium">{t('moodCraving', lang)}</span>
         </div>
 
         <textarea
           value={mood}
           onChange={e => onMoodChange(e.target.value)}
-          placeholder="例: I'm stressed and want comfort food but I'm broke..."
+          placeholder={t('moodPlaceholder', lang)}
           rows={3}
           className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-white/30 resize-none focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/30 transition-all"
         />
@@ -115,7 +149,7 @@ export function DecisionSidebar({
           className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors"
         >
           <ChevronDown className={`w-3 h-3 transition-transform ${showSuggestions ? 'rotate-180' : ''}`} />
-          快速输入建议
+          {t('quickInput', lang)}
         </button>
 
         {showSuggestions && (
@@ -138,19 +172,20 @@ export function DecisionSidebar({
         )}
       </div>
 
-      {/* Nutritional Priority */}
+      {/* Cuisine Preference */}
       <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <Leaf className="w-4 h-4" style={{ color: '#D4AF37' }} />
-          <span className="text-white/80 text-sm font-medium">营养优先级</span>
+          <UtensilsCrossed className="w-4 h-4" style={{ color: '#D4AF37' }} />
+          <span className="text-white/80 text-sm font-medium">{t('preferredCuisine', lang)}</span>
+          <span className="text-xs text-white/40">(可选)</span>
         </div>
-        <div className="space-y-2">
-          {NUTRITION_OPTIONS.map(option => {
-            const checked = priorities.includes(option)
+        <div className="space-y-1.5 max-h-48 overflow-y-auto">
+          {CUISINE_OPTIONS.map(option => {
+            const checked = cuisinePreference.includes(option)
             return (
               <label
                 key={option}
-                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-all ${
+                className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer border transition-all ${
                   checked
                     ? 'border-yellow-400/50 bg-yellow-400/10'
                     : 'border-white/10 bg-white/5 hover:border-white/25'
@@ -160,7 +195,7 @@ export function DecisionSidebar({
                   className={`w-4 h-4 rounded flex items-center justify-center border-2 flex-shrink-0 transition-all ${
                     checked ? 'border-yellow-400 bg-yellow-400' : 'border-white/30'
                   }`}
-                  onClick={() => onPriorityToggle(option)}
+                  onClick={() => onCuisineToggle(option)}
                 >
                   {checked && (
                     <svg className="w-2.5 h-2.5" viewBox="0 0 10 10" fill="none">
@@ -170,7 +205,7 @@ export function DecisionSidebar({
                 </div>
                 <span
                   className={`text-sm font-medium ${checked ? 'text-yellow-300' : 'text-white/70'}`}
-                  onClick={() => onPriorityToggle(option)}
+                  onClick={() => onCuisineToggle(option)}
                 >
                   {option}
                 </span>
@@ -184,24 +219,57 @@ export function DecisionSidebar({
       <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" style={{ color: '#D4AF37' }} />
-          <span className="text-white/80 text-sm font-medium">距下次发款</span>
+          <label className="flex items-center gap-2 cursor-pointer flex-1">
+            <input
+              type="checkbox"
+              checked={hasRegularAllowance}
+              onChange={e => onHasRegularChange(e.target.checked)}
+              className="w-4 h-4 rounded border-2 border-white/30 accent-yellow-400"
+            />
+            <span className="text-white/80 text-sm font-medium">{t('hasRegularAllowance', lang)}</span>
+          </label>
         </div>
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            min={1}
-            max={30}
-            value={daysUntilAllowance}
-            onChange={e => onDaysChange(Math.max(1, Math.min(30, Number(e.target.value))))}
-            className="w-20 bg-white/5 border border-white/15 rounded-xl px-3 py-2.5 font-mono text-white text-center text-xl font-bold focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/30 transition-all"
-          />
-          <div>
-            <p className="text-white text-sm font-medium">天</p>
-            <p className={`text-xs mt-0.5 ${daysUntilAllowance > 15 ? 'text-red-400' : daysUntilAllowance > 7 ? 'text-yellow-400' : 'text-green-400'}`}>
-              {daysUntilAllowance > 15 ? '需严格控制' : daysUntilAllowance > 7 ? '保持谨慎' : '即将补充'}
-            </p>
-          </div>
-        </div>
+
+        {hasRegularAllowance && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-3"
+          >
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={daysUntilAllowance || ''}
+              onChange={e => onDaysChange(e.target.value ? Number(e.target.value) : null)}
+              placeholder="输入天数"
+              className="w-20 bg-white/5 border border-white/15 rounded-xl px-3 py-2.5 font-mono text-white text-center text-lg font-bold focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/30 transition-all"
+            />
+            <div>
+              <p className="text-white text-sm font-medium">{t('daysAmount', lang)}</p>
+              <p
+                className={`text-xs mt-0.5 ${
+                  !daysUntilAllowance
+                    ? 'text-white/40'
+                    : daysUntilAllowance > 15
+                      ? 'text-red-400'
+                      : daysUntilAllowance > 7
+                        ? 'text-yellow-400'
+                        : 'text-green-400'
+                }`}
+              >
+                {!daysUntilAllowance
+                  ? '—'
+                  : daysUntilAllowance > 15
+                    ? t('strictControl', lang)
+                    : daysUntilAllowance > 7
+                      ? t('stayCautious', lang)
+                      : t('soonRefill', lang)}
+              </p>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Analyze Button */}
@@ -221,12 +289,12 @@ export function DecisionSidebar({
               transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
               style={{ borderTopColor: '#001f40', borderColor: '#001f4040' }}
             />
-            Z.AI 分析中...
+            {t('analyzing', lang)}
           </>
         ) : (
           <>
             <Sparkles className="w-4 h-4" />
-            生成 AI 餐饮决策
+            {t('generateDecision', lang)}
           </>
         )}
       </motion.button>

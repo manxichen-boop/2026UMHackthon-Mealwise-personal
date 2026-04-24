@@ -4,13 +4,16 @@ import { motion } from 'framer-motion'
 import { Brain, TrendingUp, Heart, ShieldCheck } from 'lucide-react'
 import { GlassCard } from './glass-card'
 import { ScoreBar } from './score-bar'
+import type { Language } from '@/lib/i18n'
+import { t } from '@/lib/i18n'
 import type { AIDecision } from '@/lib/mock-data'
 
 interface ReasoningCardProps {
+  lang: Language
   decision: AIDecision
 }
 
-export function ReasoningCard({ decision }: ReasoningCardProps) {
+export function ReasoningCard({ lang, decision }: ReasoningCardProps) {
   const { reasoning, tradeoffAnalysis, moodInsight, budgetInsight } = decision
 
   return (
@@ -24,12 +27,12 @@ export function ReasoningCard({ decision }: ReasoningCardProps) {
           <Brain className="w-4 h-4" style={{ color: '#D4AF37' }} />
         </div>
         <div>
-          <h3 className="text-white font-semibold text-sm">Z.AI Decision Intelligence</h3>
-          <p className="text-white/40 text-xs">权衡分析引擎</p>
+          <h3 className="text-white font-semibold text-sm">{t('zAIDecisionIntelligence', lang)}</h3>
+          <p className="text-white/40 text-xs">{lang === 'zh' ? '权衡分析引擎' : 'Trade-off Analysis'}</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5 text-xs font-mono" style={{ color: '#D4AF37' }}>
           <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          实时运算
+          {lang === 'zh' ? '实时运算' : 'Live'}
         </div>
       </div>
 
@@ -45,12 +48,12 @@ export function ReasoningCard({ decision }: ReasoningCardProps) {
 
       {/* Trade-off scores */}
       <div className="space-y-3">
-        <p className="text-xs text-white/40 uppercase tracking-widest font-medium">Trade-off Analysis</p>
-        <ScoreBar label="心情适配度 (Mood)" score={tradeoffAnalysis.moodScore} color="#D4AF37" delay={0.5} />
-        <ScoreBar label="预算健康度 (Budget)" score={tradeoffAnalysis.budgetScore} color="#60a5fa" delay={0.6} />
-        <ScoreBar label="营养均衡度 (Nutrition)" score={tradeoffAnalysis.nutritionScore} color="#4ade80" delay={0.7} />
+        <p className="text-xs text-white/40 uppercase tracking-widest font-medium">{lang === 'zh' ? 'Trade-off 权衡分析' : 'Trade-off Analysis'}</p>
+        <ScoreBar label={t('moodScore', lang)} score={tradeoffAnalysis.moodScore} color="#D4AF37" delay={0.5} />
+        <ScoreBar label={t('budgetScore', lang)} score={tradeoffAnalysis.budgetScore} color="#60a5fa" delay={0.6} />
+        <ScoreBar label={t('nutritionScore', lang)} score={tradeoffAnalysis.nutritionScore} color="#4ade80" delay={0.7} />
         <div className="pt-1 border-t border-white/10">
-          <ScoreBar label="综合决策分 (Overall)" score={tradeoffAnalysis.overallScore} color="#f59e0b" delay={0.8} />
+          <ScoreBar label={lang === 'zh' ? '综合决策分 (Overall)' : 'Overall Score'} score={tradeoffAnalysis.overallScore} color="#f59e0b" delay={0.8} />
         </div>
       </div>
 
@@ -64,7 +67,7 @@ export function ReasoningCard({ decision }: ReasoningCardProps) {
         >
           <div className="flex items-center gap-1.5">
             <Heart className="w-3.5 h-3.5 text-pink-400" />
-            <span className="text-xs text-pink-300 font-medium">心情洞察</span>
+            <span className="text-xs text-pink-300 font-medium">{t('moodInsight', lang)}</span>
           </div>
           <p className="text-xs text-white/65 leading-relaxed">{moodInsight}</p>
         </motion.div>
@@ -77,7 +80,7 @@ export function ReasoningCard({ decision }: ReasoningCardProps) {
         >
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-xs text-blue-300 font-medium">财务洞察</span>
+            <span className="text-xs text-blue-300 font-medium">{t('budgetInsight', lang)}</span>
           </div>
           <p className="text-xs text-white/65 leading-relaxed">{budgetInsight}</p>
         </motion.div>
@@ -92,7 +95,7 @@ export function ReasoningCard({ decision }: ReasoningCardProps) {
       >
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4" style={{ color: '#D4AF37' }} />
-          <span className="text-sm text-white/70">综合决策评分</span>
+          <span className="text-sm text-white/70">{lang === 'zh' ? '综合决策评分' : 'Overall Score'}</span>
         </div>
         <div className="flex items-baseline gap-1">
           <span className="font-mono text-2xl font-black" style={{ color: '#D4AF37' }}>

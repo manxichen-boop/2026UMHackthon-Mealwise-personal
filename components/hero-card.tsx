@@ -1,15 +1,18 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { MapPin, Flame, Zap, Award } from 'lucide-react'
+import { MapPin, Flame, Zap, Award, ExternalLink } from 'lucide-react'
 import { GlassCard } from './glass-card'
+import type { Language } from '@/lib/i18n'
+import { t } from '@/lib/i18n'
 import type { AIDecision } from '@/lib/mock-data'
 
 interface HeroCardProps {
+  lang: Language
   decision: AIDecision
 }
 
-export function HeroCard({ decision }: HeroCardProps) {
+export function HeroCard({ lang, decision }: HeroCardProps) {
   const { meal, confidence } = decision
 
   return (
@@ -28,7 +31,7 @@ export function HeroCard({ decision }: HeroCardProps) {
             style={{ backgroundColor: '#D4AF37' }}
           />
           <span className="text-xs text-white/50 uppercase tracking-widest font-medium">
-            AI 推荐餐点
+            {t('recommendedMeal', lang)}
           </span>
         </div>
         <div
@@ -36,7 +39,7 @@ export function HeroCard({ decision }: HeroCardProps) {
           style={{ borderColor: '#D4AF37', color: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.1)' }}
         >
           <Award className="w-3 h-3" />
-          置信度 {confidence}%
+          {t('confidence', lang)} {confidence}%
         </div>
       </div>
 
@@ -89,7 +92,7 @@ export function HeroCard({ decision }: HeroCardProps) {
             transition={{ duration: 0.4, delay: 0.3 }}
             className="text-xl lg:text-2xl font-bold text-white leading-tight"
           >
-            {meal.name}
+            {lang === 'zh' ? meal.name : meal.name_en}
           </motion.h2>
 
           <motion.div
@@ -113,7 +116,7 @@ export function HeroCard({ decision }: HeroCardProps) {
             className="flex items-center gap-1.5 mt-2 text-white/50"
           >
             <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="text-sm truncate">{meal.location}</span>
+            <span className="text-sm truncate">{lang === 'zh' ? meal.location : meal.location_en}</span>
           </motion.div>
 
           {/* Nutrition badges */}
@@ -128,19 +131,34 @@ export function HeroCard({ decision }: HeroCardProps) {
               <span className="text-xs text-white/70 font-mono">{meal.calories} kcal</span>
             </div>
             <div className="flex items-center gap-1 bg-white/10 rounded-full px-2.5 py-1 border border-white/15">
-              <span className="text-xs text-white/70 font-mono">{meal.protein}g 蛋白质</span>
+              <span className="text-xs text-white/70 font-mono">{meal.protein}g {lang === 'zh' ? '蛋白质' : 'protein'}</span>
             </div>
             {meal.veggies && (
               <div className="flex items-center gap-1 bg-green-500/10 rounded-full px-2.5 py-1 border border-green-500/25">
-                <span className="text-xs text-green-400 font-medium">蔬菜</span>
+                <span className="text-xs text-green-400 font-medium">{lang === 'zh' ? '蔬菜' : 'Veggies'}</span>
               </div>
             )}
             {meal.lowCarb && (
               <div className="flex items-center gap-1 bg-blue-500/10 rounded-full px-2.5 py-1 border border-blue-500/25">
-                <span className="text-xs text-blue-400 font-medium">低碳</span>
+                <span className="text-xs text-blue-400 font-medium">{lang === 'zh' ? '低碳' : 'Low Carb'}</span>
               </div>
             )}
           </motion.div>
+
+          {/* Google Maps Button */}
+          <motion.a
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.7 }}
+            href={meal.mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mt-4 px-3.5 py-2 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-white"
+          >
+            <MapPin className="w-3.5 h-3.5" style={{ color: '#D4AF37' }} />
+            {t('openInMaps', lang)}
+            <ExternalLink className="w-3 h-3 text-white/40" />
+          </motion.a>
         </div>
       </div>
     </GlassCard>

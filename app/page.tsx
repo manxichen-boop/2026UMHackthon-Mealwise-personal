@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GraduationCap, Cpu } from 'lucide-react'
 
+import { LanguageSwitcher } from '@/components/language-switcher'
 import { DecisionSidebar } from '@/components/decision-sidebar'
 import { HeroCard } from '@/components/hero-card'
 import { ReasoningCard } from '@/components/reasoning-card'
@@ -16,13 +17,20 @@ import {
   type AIDecision,
   type SpendingDataPoint,
 } from '@/lib/mock-data'
+import type { Language } from '@/lib/i18n'
+import { t } from '@/lib/i18n'
 
 export default function HomePage() {
+  // Language state
+  const [lang, setLang] = useState<Language>('zh')
+
   // Input state
-  const [budget, setBudget] = useState(45)
+  const [psychologicalBudget, setPsychologicalBudget] = useState<number | null>(45)
+  const [totalRemainingAllowance, setTotalRemainingAllowance] = useState<number | null>(null)
   const [mood, setMood] = useState('')
-  const [priorities, setPriorities] = useState<string[]>([])
-  const [daysUntilAllowance, setDaysUntilAllowance] = useState(12)
+  const [cuisinePreference, setCuisinePreference] = useState<string[]>([])
+  const [daysUntilAllowance, setDaysUntilAllowance] = useState<number | null>(12)
+  const [hasRegularAllowance, setHasRegularAllowance] = useState(true)
 
   // Output state
   const [decision, setDecision] = useState<AIDecision | null>(null)
@@ -30,8 +38,8 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
 
-  const handlePriorityToggle = useCallback((option: string) => {
-    setPriorities(prev =>
+  const handleCuisineToggle = useCallback((option: string) => {
+    setCuisinePreference(prev =>
       prev.includes(option) ? prev.filter(p => p !== option) : [...prev, option]
     )
   }, [])
@@ -44,15 +52,21 @@ export default function HomePage() {
     // Simulate Z.AI processing delay
     await new Promise(resolve => setTimeout(resolve, 1400))
 
-    const result = generateAIDecision(budget, mood, priorities, daysUntilAllowance)
-    const aiDailySpend = result.meal.price * 2 + 1.5
-    const forecast = generateSpendingForecast(budget, aiDailySpend)
+    const result = generateAIDecision(
+      psychologicalBudget,
+      totalRemainingAllowance,
+      daysUntilAllowance,
+      mood,
+      cuisinePreference
+    )
+    const aiDailySpend = result.meal.price * 2 + 2
+    const forecast = generateSpendingForecast(psychologicalBudget || 20, aiDailySpend)
 
     setDecision(result)
     setForecastData(forecast)
     setIsLoading(false)
     setHasAnalyzed(true)
-  }, [budget, mood, priorities, daysUntilAllowance])
+  }, [psychologicalBudget, totalRemainingAllowance, daysUntilAllowance, mood, cuisinePreference])
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -67,18 +81,21 @@ export default function HomePage() {
               <GraduationCap className="w-4.5 h-4.5" style={{ color: '#001f40' }} />
             </div>
             <div>
-              <span className="text-white font-bold text-sm tracking-tight">SmartBite</span>
-              <span className="text-white/40 text-sm"> Advisor</span>
+              <span className="text-white font-bold text-sm tracking-tight">{t('navTitle', lang)}</span>
+              <span className="text-white/40 text-sm"> {t('navSubtitle', lang)}</span>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-xs text-white/40">
-            <Cpu className="w-3.5 h-3.5" style={{ color: '#D4AF37' }} />
-            <span>Powered by</span>
-            <span className="font-mono font-semibold" style={{ color: '#D4AF37' }}>Z.AI GLM</span>
-            <span className="ml-2 px-2 py-0.5 rounded-full text-xs border border-white/15 bg-white/5">
-              UMHackathon 2026
-            </span>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-white/40">
+              <Cpu className="w-3.5 h-3.5" style={{ color: '#D4AF37' }} />
+              <span>{t('poweredBy', lang)}</span>
+              <span className="font-mono font-semibold" style={{ color: '#D4AF37' }}>{t('zAIGLM', lang)}</span>
+              <span className="ml-2 px-2 py-0.5 rounded-full text-xs border border-white/15 bg-white/5">
+                {t('hackathon', lang)}
+              </span>
+            </div>
+            <LanguageSwitcher currentLanguage={lang} onChange={setLang} />
           </div>
         </div>
       </header>
@@ -89,15 +106,20 @@ export default function HomePage() {
 
           {/* Sidebar */}
           <DecisionSidebar
-            budget={budget}
+            lang={lang}
+            psychologicalBudget={psychologicalBudget}
+            totalRemainingAllowance={totalRemainingAllowance}
             mood={mood}
-            priorities={priorities}
+            cuisinePreference={cuisinePreference}
             daysUntilAllowance={daysUntilAllowance}
+            hasRegularAllowance={hasRegularAllowance}
             isLoading={isLoading}
-            onBudgetChange={setBudget}
+            onPsychologicalBudgetChange={setPsychologicalBudget}
+            onTotalRemainingChange={setTotalRemainingAllowance}
             onMoodChange={setMood}
-            onPriorityToggle={handlePriorityToggle}
+            onCuisineToggle={handleCuisineToggle}
             onDaysChange={setDaysUntilAllowance}
+            onHasRegularChange={setHasRegularAllowance}
             onAnalyze={handleAnalyze}
           />
 
@@ -124,9 +146,9 @@ export default function HomePage() {
                   transition={{ duration: 0.4 }}
                   className="space-y-4"
                 >
-                  <HeroCard decision={decision} />
-                  <ReasoningCard decision={decision} />
-                  <ForecastCard data={forecastData} projectedSavings={decision.projectedSavings} />
+                  <HeroCard lang={lang} decision={decision} />
+                  <ReasoningCard lang={lang} decision={decision} />
+                  <ForecastCard lang={lang} data={forecastData} projectedSavings={decision.projectedSavings} />
                 </motion.div>
               )}
 
@@ -166,18 +188,18 @@ export default function HomePage() {
                   </motion.div>
 
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold text-white">智能餐饮决策助手</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('smartMealAdvisor', lang)}</h2>
                     <p className="text-white/40 text-sm max-w-xs leading-relaxed">
-                      输入您的预算、心情和营养偏好，让 Z.AI 为您生成最优餐饮方案，量化您的月度节省。
+                      {t('inputInfoDescription', lang)}
                     </p>
                   </div>
 
                   {/* Feature tags */}
                   <div className="flex flex-wrap gap-2 justify-center">
                     {[
-                      '心情 × 财务权衡分析',
-                      '月度支出预测',
-                      '营养优化推荐',
+                      t('feature1', lang),
+                      t('feature2', lang),
+                      t('feature3', lang),
                     ].map((tag, i) => (
                       <motion.span
                         key={i}
@@ -196,7 +218,7 @@ export default function HomePage() {
                     transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     className="text-white/25 text-sm"
                   >
-                    ← 在左侧填写信息后点击生成
+                    {t('fillLeftSide', lang)}
                   </motion.div>
                 </motion.div>
               )}
@@ -208,7 +230,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-white/10 py-4 px-6 text-center">
         <p className="text-white/20 text-xs font-mono">
-          SmartBite Advisor · UMHackathon 2026 · Domain 2: AI 赋能经济决策
+          {t('footer', lang)}
         </p>
       </footer>
     </div>

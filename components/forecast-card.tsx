@@ -13,23 +13,27 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { GlassCard } from './glass-card'
+import type { Language } from '@/lib/i18n'
+import { t } from '@/lib/i18n'
 import type { SpendingDataPoint } from '@/lib/mock-data'
 
 interface ForecastCardProps {
+  lang: Language
   data: SpendingDataPoint[]
   projectedSavings: number
 }
 
 // Custom Tooltip component
-function CustomTooltip({ active, payload, label }: {
+function CustomTooltip({ active, payload, label, lang = 'zh' }: {
   active?: boolean
   payload?: Array<{ name: string; value: number; color: string }>
   label?: number
+  lang?: Language
 }) {
   if (!active || !payload?.length) return null
   return (
     <div className="backdrop-blur-md bg-[#001f40]/90 border border-white/20 rounded-xl p-3 shadow-xl text-xs">
-      <p className="text-white/60 mb-2 font-medium">第 {label} 天</p>
+      <p className="text-white/60 mb-2 font-medium">{lang === 'zh' ? '第' : 'Day'} {label} {lang === 'zh' ? '天' : ''}</p>
       {payload.map((p, i) => (
         <div key={i} className="flex items-center gap-2 py-0.5">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
@@ -43,7 +47,7 @@ function CustomTooltip({ active, payload, label }: {
   )
 }
 
-export function ForecastCard({ data, projectedSavings }: ForecastCardProps) {
+export function ForecastCard({ lang, data, projectedSavings }: ForecastCardProps) {
   const finalRandom = data[data.length - 1]?.random ?? 0
   const finalAI = data[data.length - 1]?.aiGuided ?? 0
   const actualSavings = Math.max(0, finalRandom - finalAI)
@@ -60,8 +64,8 @@ export function ForecastCard({ data, projectedSavings }: ForecastCardProps) {
             <BarChart3 className="w-4 h-4" style={{ color: '#D4AF37' }} />
           </div>
           <div>
-            <h3 className="text-white font-semibold text-sm">本月支出趋势</h3>
-            <p className="text-white/40 text-xs">Financial Forecast (30 Days)</p>
+            <h3 className="text-white font-semibold text-sm">{t('spendingForecast', lang)}</h3>
+            <p className="text-white/40 text-xs">{lang === 'zh' ? '财务预测与对比分析' : 'Financial Forecast Comparison'}</p>
           </div>
         </div>
 
@@ -74,7 +78,7 @@ export function ForecastCard({ data, projectedSavings }: ForecastCardProps) {
         >
           <div className="flex items-center gap-1.5 justify-end">
             <PiggyBank className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-white/50">预计月节省</span>
+            <span className="text-xs text-white/50">{t('projectedSavings', lang)}</span>
           </div>
           <div className="font-mono font-black text-green-400 text-xl">
             RM {projectedSavings}
@@ -98,7 +102,7 @@ export function ForecastCard({ data, projectedSavings }: ForecastCardProps) {
               tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10, fontFamily: 'Geist Mono' }}
               tickLine={false}
               axisLine={false}
-              label={{ value: '天', position: 'insideRight', offset: 5, fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+              label={{ value: lang === 'zh' ? '天' : 'day', position: 'insideRight', offset: 5, fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
             />
             <YAxis
               tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10, fontFamily: 'Geist Mono' }}
@@ -106,14 +110,14 @@ export function ForecastCard({ data, projectedSavings }: ForecastCardProps) {
               axisLine={false}
               tickFormatter={v => `RM${v}`}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip lang={lang} />} />
             <Legend
               wrapperStyle={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', paddingTop: '8px' }}
             />
             <Line
               type="monotone"
               dataKey="random"
-              name="随机消费"
+              name={t('randomSpending', lang)}
               stroke="rgba(248,113,113,0.8)"
               strokeWidth={2}
               dot={false}
@@ -123,7 +127,7 @@ export function ForecastCard({ data, projectedSavings }: ForecastCardProps) {
             <Line
               type="monotone"
               dataKey="aiGuided"
-              name="AI 建议"
+              name={t('aiGuided', lang)}
               stroke="#D4AF37"
               strokeWidth={2.5}
               dot={false}
@@ -137,19 +141,19 @@ export function ForecastCard({ data, projectedSavings }: ForecastCardProps) {
       <div className="grid grid-cols-3 gap-3">
         {[
           {
-            label: '随机消费 (月)',
+            label: lang === 'zh' ? '随机消费 (月)' : 'Random (month)',
             value: `RM ${finalRandom.toFixed(0)}`,
             color: 'text-red-400',
             icon: '↑',
           },
           {
-            label: 'AI 建议 (月)',
+            label: lang === 'zh' ? 'AI 建议 (月)' : 'AI Guided (month)',
             value: `RM ${finalAI.toFixed(0)}`,
             color: 'text-yellow-400',
             icon: '→',
           },
           {
-            label: '节省金额',
+            label: lang === 'zh' ? '节省金额' : 'Savings',
             value: `RM ${actualSavings.toFixed(0)}`,
             color: 'text-green-400',
             icon: <TrendingDown className="w-3 h-3 inline" />,
