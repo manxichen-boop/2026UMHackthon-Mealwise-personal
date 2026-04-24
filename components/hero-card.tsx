@@ -5,15 +5,41 @@ import { MapPin, Flame, Zap, Award, ExternalLink } from 'lucide-react'
 import { GlassCard } from './glass-card'
 import type { Language } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
-import type { AIDecision } from '@/lib/mock-data'
 
 interface HeroCardProps {
   lang: Language
-  decision: AIDecision
+  decision: {
+    recommended_dish: string
+    meal?: {
+      id: string
+      name: string
+      name_en: string
+      price: number
+      calories: number
+      protein: number
+      carbs: number
+      veggies: boolean
+      lowCarb: boolean
+      cuisine: string
+      location: string
+      location_en: string
+      mapsUrl: string
+    }
+    confidence?: number
+  }
 }
 
 export function HeroCard({ lang, decision }: HeroCardProps) {
-  const { meal, confidence } = decision
+  const meal = decision.meal
+  const confidence = decision.confidence || 85
+
+  if (!meal) {
+    return (
+      <GlassCard delay={0.1} className="p-6">
+        <p className="text-white/60">{lang === 'zh' ? '未找到推荐菜品' : 'No meal data available'}</p>
+      </GlassCard>
+    )
+  }
 
   return (
     <GlassCard delay={0.1} className="p-6 relative overflow-hidden">
